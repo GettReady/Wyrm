@@ -1,7 +1,21 @@
 ﻿@page "/"
 
-<h1>Hello, world!</h1>
+<button class="btn btn-primary" tabindex="0" @onclick="StartGame" @onkeydown="ChangeDirection">Click me</button>
 
-Welcome to your new app.
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@code {
+    int[] cells;
+    Queue<(int x, int y)> snake;
+    int animationDelay = 300;
+
+    private async Task StartGame()
+    {
+        await Task.Delay(animationDelay);
+    }
+
+    private void ChangeDirection()
+    {
+
+    }
+
+}
