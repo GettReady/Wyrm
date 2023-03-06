@@ -1,21 +1,123 @@
 ﻿@page "/"
 
-<button class="btn btn-primary" tabindex="0" @onclick="StartGame" @onkeydown="ChangeDirection">Click me</button>
-
+<div class="field-container">
+    <div class="field">
+        @foreach (int cell in cells)
+        {
+            <div class="@("cell " + (cell == 0 ? "c-empty" : cell == 1 ? "c-snake" : "c-apple"))"></div>
+        }
+    </div>
+    <button class="btn btn-primary pixel-font" tabindex="0" @onclick="StartGame" @onkeydown="ChangeDirection" style="width: 100px; height: 50px; font-size: 27px;">@(gameIsRunning ? "PAUSE" : "START")</button>
+</div>
 
 @code {
+    bool gameIsRunning = false;
     int[] cells;
     Queue<(int x, int y)> snake;
+    (int x, int y) snakeHead = (4, 5);
+    (int x, int y) direction = (-1, 0);
     int animationDelay = 300;
+    int initialSnakeLength = 3;
+    int size = 10;
+    Random random = new Random();
+    Dictionary<string, (int x, int y)> keyCodesDirections = new Dictionary<string, (int x, int y)> ()
+    {
+        { "KeyW", (0, -1) },
+        { "KeyA", (-1, 0) },
+        { "KeyS", (0, 1) },
+        { "KeyD", (1, 0) },
+        { "ArrowUp", (0, -1) },
+        { "ArrowLeft", (-1, 0) },
+        { "ArrowDown", (0, 1) },
+        { "ArrowRight", (1, 0) },
+    };
+
 
     private async Task StartGame()
     {
-        await Task.Delay(animationDelay);
+        gameIsRunning = !gameIsRunning;
+
+        while (gameIsRunning)
+        {
+            MoveSnake();
+            StateHasChanged();
+            await Task.Delay(animationDelay);
+        }
     }
 
-    private void ChangeDirection()
+    private void ChangeDirection(KeyboardEventArgs e)
     {
-
+        if(keyCodesDirections.ContainsKey(e.Code))
+        {
+            direction = keyCodesDirections[e.Code];
+        }
     }
 
+    private void MoveSnake()
+    {
+        (int x, int y) newHead = (snakeHead.x + direction.x, snakeHead.y + direction.y);
+        if (newHead.x < size && newHead.x > -1 && newHead.y < size && newHead.y > -1)
+        {
+            snakeHead = newHead;
+            snake.Enqueue(newHead);
+            if (cells[newHead.y * size + newHead.x] != 2)
+            {
+                var tail = snake.Dequeue();
+                cells[tail.y * size + tail.x] = 0;
+            }
+            else
+            {
+                SpawnApple();
+            }
+            cells[newHead.y * size + newHead.x] = 1;
+        }
+    }
+
+    private void SpawnApple()
+    {
+        int cellId;
+        while(true)
+        {
+            cellId = random.Next(cells.Length);
+            if (cells[cellId] == 0)
+                break;
+        }
+        cells[cellId] = 2;
+    }
+
+    private void SetUpField()
+    {
+        cells = FillCells(size, size, 0);
+        SetUpSnake();
+        SpawnApple();
+    }
+
+    private int[] FillCells(int sizeX, int sizeY, int value)
+    {
+        int[] cells = new int[sizeX * sizeY];
+        for (int i = 0; i < sizeX * sizeY; ++i)
+        {
+            cells[i] = value;
+        }
+        return cells;
+    }
+
+    private void SetUpSnake()
+    {
+        snake = new Queue<(int x, int y)>();
+
+        for (int i = initialSnakeLength-1; i > 0; --i)
+        {
+            snake.Enqueue((snakeHead.x + i, snakeHead.y));
+            cells[snakeHead.y * size + (snakeHead.x + i)] = 1;
+        }
+
+        snake.Enqueue(snakeHead);
+        cells[snakeHead.y * size + snakeHead.x] = 1;
+    }
+
+    protected override void OnInitialized()
+    {
+        SetUpField();
+    }
 }
