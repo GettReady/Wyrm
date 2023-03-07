@@ -16,12 +16,13 @@
     Queue<(int x, int y)> snake;
     (int x, int y) snakeHead = (4, 5);
     (int x, int y) direction = (-1, 0);
+    (int x, int y) newDirection;
     int animationDelay = 300;
     int initialSnakeLength = 3;
     int size = 10;
     Random random = new Random();
-    Dictionary<string, (int x, int y)> keyCodesDirections = new Dictionary<string, (int x, int y)> ()
-    {
+    Dictionary<string, (int x, int y)> keyCodesDirections = new Dictionary<string, (int x, int y)>()
+{
         { "KeyW", (0, -1) },
         { "KeyA", (-1, 0) },
         { "KeyS", (0, 1) },
@@ -47,14 +48,19 @@
 
     private void ChangeDirection(KeyboardEventArgs e)
     {
-        if(keyCodesDirections.ContainsKey(e.Code))
+        if (keyCodesDirections.ContainsKey(e.Code))
         {
-            direction = keyCodesDirections[e.Code];
+            var temp = keyCodesDirections[e.Code];
+            if (temp.x != -direction.x && temp.y != -direction.y)
+            {
+                newDirection = keyCodesDirections[e.Code];
+            }
         }
     }
 
     private void MoveSnake()
     {
+        direction = newDirection;
         (int x, int y) newHead = (snakeHead.x + direction.x, snakeHead.y + direction.y);
         if (newHead.x < size && newHead.x > -1 && newHead.y < size && newHead.y > -1)
         {
@@ -76,7 +82,7 @@
     private void SpawnApple()
     {
         int cellId;
-        while(true)
+        while (true)
         {
             cellId = random.Next(cells.Length);
             if (cells[cellId] == 0)
@@ -88,6 +94,7 @@
     private void SetUpField()
     {
         cells = FillCells(size, size, 0);
+        newDirection = direction;
         SetUpSnake();
         SpawnApple();
     }
@@ -106,7 +113,7 @@
     {
         snake = new Queue<(int x, int y)>();
 
-        for (int i = initialSnakeLength-1; i > 0; --i)
+        for (int i = initialSnakeLength - 1; i > 0; --i)
         {
             snake.Enqueue((snakeHead.x + i, snakeHead.y));
             cells[snakeHead.y * size + (snakeHead.x + i)] = 1;
