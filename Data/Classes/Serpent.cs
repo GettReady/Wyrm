@@ -5,18 +5,23 @@ using System.Threading.Tasks;
 
 namespace Wyrm.Data.Classes
 {
-    public class Serpent
+    public abstract class Serpent : IActor
     {
-        Queue<(int x, int y)> body;
-        int length = 3;
-        int animationDelay = 300;
-        (int x, int y) snakeHead;
-        (int x, int y) direction;        
+        protected Queue<(int x, int y)> body;
+        protected int length = 3;
+        protected int animationDelay = 300;
+        protected (int x, int y) snakeHead;
+        protected (int x, int y) direction;
+        protected Field field;
+        public event Action Snacked;
 
-        public Serpent((int, int) snakeHead, (int, int) direction)
+        public bool IsPaused { get; protected set; } = false;
+
+        public Serpent((int, int) snakeHead, (int, int) direction, Field field)
         {
             this.snakeHead = snakeHead;
             this.direction = direction;
+            this.field = field;
             InitializeBody();
         }
 
@@ -29,5 +34,20 @@ namespace Wyrm.Data.Classes
             }
             body.Enqueue(snakeHead);
         }
+
+        protected void OnSnack()
+        {
+            Snacked?.Invoke();
+        }
+
+        public abstract void Move();
+
+        public abstract Task Act();
+
+        public abstract Task Spawn();
+
+        public abstract void Pause();
+
+        public abstract void Unpause();
     }
 }
